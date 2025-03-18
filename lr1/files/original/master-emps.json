@@ -1,0 +1,30 @@
+[
+  {
+    "emp_num": 8,
+    "last_name": "Васильев",
+    "first_name": "Виталий",
+    "second_name": "Александрович",
+    "coeff": 2
+  },
+  {
+    "emp_num": 12,
+    "last_name": "Контовский",
+    "first_name": "Илья",
+    "second_name": "Константинович",
+    "coeff": 2
+  },
+  {
+    "emp_num": 14,
+    "last_name": "Скворцов",
+    "first_name": "Владимир",
+    "second_name": "Дмитриевич",
+    "coeff": 1
+  },
+  {
+    "emp_num": 23,
+    "last_name": "Спивченко К.Т.",
+    "first_name": "Кирилл",
+    "second_name": "Тимофеевич",
+    "coeff": 1
+  }
+]
