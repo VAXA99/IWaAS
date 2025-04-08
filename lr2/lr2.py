@@ -18,10 +18,27 @@ def remove_abbreviations(text):
         return ' '.join([w for w in words if not re.search(r'\.', w)])
     return text
 
-def read_txt_fixed_width(path):
-    df = pd.read_fwf(path, header=0)
-    df.columns = ["FULL_CLIENT_NAME", "PASSPORT", "VIN"]
-    return df
+def read_txt_fixed_width(file_path):
+    raw_lines = file_path.read_text(encoding="utf-8").splitlines()
+    cleaned_rows = []
+
+    for line in raw_lines:
+        if "FULL_CLIENT_NAME" in line or "varchar" in line:
+            continue
+
+        full_name = line[0:34].strip()
+        passport = line[34:44].strip()
+        license = line[44:50].strip()
+        vin = line[52:69].strip()
+
+        cleaned_rows.append({
+            "FULL_CLIENT_NAME": full_name,
+            "PASSPORT": passport,
+            "LICENSE": license,
+            "VIN": vin
+        })
+
+    return pd.DataFrame(cleaned_rows)
 
 def read_and_fix_json(path):
     df = pd.read_json(path)
@@ -65,12 +82,16 @@ dim_master = json_df.rename(columns={
     "coeff": "коэффициент"
 })[["emp_num", "фамилия", "имя", "отчество", "коэффициент"]].drop_duplicates()
 
-# === DIM_Клиент (ID от 1, паспорт как str) ===
+# === DIM_Клиент (ID от 1, паспорт как str, добавлено LICENSE) ===
 fio_split = txt_df["FULL_CLIENT_NAME"].str.strip().str.split(" ", expand=True)
 fio_split.columns = ["фамилия", "имя", "отчество"]
 
-dim_client = pd.concat([txt_df["PASSPORT"], fio_split], axis=1)
-dim_client = dim_client.rename(columns={"PASSPORT": "паспорт"}).drop_duplicates().reset_index(drop=True)
+dim_client = pd.concat([txt_df["PASSPORT"], txt_df["LICENSE"], fio_split], axis=1)
+dim_client = dim_client.rename(columns={
+    "PASSPORT": "паспорт",
+    "LICENSE": "вод_удостоверение"
+}).drop_duplicates().reset_index(drop=True)
+
 dim_client.insert(0, "id", dim_client.index + 1)
 dim_client["паспорт"] = dim_client["паспорт"].astype(str)
 

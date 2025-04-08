@@ -17,11 +17,34 @@ txt_parquet_path = parquet_dir / "clients.parquet"
 excel_parquet_path = parquet_dir / "master_tasks.parquet"
 json_parquet_path = parquet_dir / "master_emps.parquet"
 
-# Функция для чтения текстового файла
+# Чтение clients
 def read_txt_fixed_width(file_path):
-    return pd.read_fwf(file_path)
+    # Читаем файл построчно
+    raw_lines = file_path.read_text(encoding="utf-8").splitlines()
+    cleaned_rows = []
 
-# Функция для чтения всех листов Excel с очисткой данных и добавлением колонки "date"
+    for line in raw_lines:
+        if "FULL_CLIENT_NAME" in line or "varchar" in line:
+            continue
+
+        # Строгое разбиение по позициям с учётом символов
+        full_name = line[0:34].strip()
+        passport = line[34:44].strip()
+        license = line[44:50].strip()
+        vin = line[52:69].strip()
+
+        cleaned_rows.append({
+            "FULL_CLIENT_NAME": full_name,
+            "PASSPORT": passport,
+            "LICENSE": license,
+            "VIN": vin
+        })
+
+    return pd.DataFrame(cleaned_rows)
+
+
+
+# Чтение всех листов Excel
 def read_excel_all_sheets(file_path):
     sheets = pd.read_excel(file_path, sheet_name=None, dtype=str)
     all_data = []
@@ -41,7 +64,7 @@ def read_excel_all_sheets(file_path):
 
     return pd.concat(all_data, ignore_index=True)
 
-# Функция для удаления сокращений (слов с точками)
+# Удаление сокращений из строк
 def remove_abbreviations(text):
     if isinstance(text, str):
         words = text.split()
@@ -49,13 +72,11 @@ def remove_abbreviations(text):
         return ' '.join(words)
     return text
 
-# Функция для чтения и исправления JSON-файла
+# Чтение и очистка JSON
 def read_and_fix_json(file_path):
     df = pd.read_json(file_path)
-
     for col in ["last_name", "first_name", "second_name"]:
         df[col] = df[col].apply(remove_abbreviations)
-
     return df
 
 # Чтение файлов
@@ -63,14 +84,7 @@ txt_df = read_txt_fixed_width(txt_file_path)
 excel_df = read_excel_all_sheets(excel_file_path)
 json_df = read_and_fix_json(json_file_path)
 
-# Вывод содержимого файлов
-print("\n==== Содержимое текстового файла ====\n")
-print(txt_df)
-
-print("\n==== Содержимое JSON-файла ====\n")
-print(json_df)
-
-# Приводим к строкам
+# Приведение типов
 txt_df = txt_df.astype(str)
 excel_df = excel_df.astype(str)
 json_df = json_df.astype(str)
