@@ -1,0 +1,3 @@
+# Игнорировать всё в original, но оставить папку
+lr3/files/original/*
+lr3/!files/original/.gitkeep
